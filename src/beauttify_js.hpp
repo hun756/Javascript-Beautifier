@@ -25,22 +25,22 @@
 
 typedef std::wstring String;
 
-namespace StringHelper 
+namespace StringHelper
 {
-    /**
+	/**
      * @brief 
      * 
      * @param source 
      * @param delimiter 
      * @return std::vector<String> 
      */
-    static std::vector<String> split(const String &source, wchar_t delimiter)
+	static std::vector<String> split(const String& source, wchar_t delimiter)
 	{
 		std::vector<String> output;
 		std::wistringstream ss(source);
 		String nextItem;
 
-		while (std::getline(ss, nextItem, delimiter))
+		while(std::getline(ss, nextItem, delimiter))
 		{
 			output.push_back(nextItem);
 		}
@@ -48,144 +48,139 @@ namespace StringHelper
 		return output;
 	}
 
-    /**
+	/**
      * @brief 
      * 
      * @tparam T 
      * @param subject 
      * @return std::wstring 
      */
-    template<typename T>
-	static std::wstring toString(const T &subject)
+	template <typename T>
+	static std::wstring toString(const T& subject)
 	{
 		std::wostringstream ss;
 		ss << subject;
 		return ss.str();
 	}
-}
+} // namespace StringHelper
 
-namespace JsBeautify 
+namespace JsBeautify
 {
-    /**
+	/**
      * @brief 
      * 
      */
-    enum class BraceStyle
+	enum class BraceStyle
 	{
 		Expand,
 		Collapse,
 		EndExpand
 	};
 
-    /**
+	/**
      * @brief 
      * 
      */
-    struct BeautifierOptions
-    {
-        uint32_t    indentSize;
-        wchar_t     indentChar;
-        bool        indentWithTabs;
-        bool        preserveNewLines;
-        bool        jsLintHappy;
-        BraceStyle  braceStyle;
-        bool        keepArrayIndentation;
-		bool        keepFunctionIndentation;
-		bool        evalCode;
-		int         wrapLineLength;
-		bool        breakChainedMethods;
+	struct BeautifierOptions
+	{
+		uint32_t indentSize;
+		wchar_t indentChar;
+		bool indentWithTabs;
+		bool preserveNewLines;
+		bool jsLintHappy;
+		BraceStyle braceStyle;
+		bool keepArrayIndentation;
+		bool keepFunctionIndentation;
+		bool evalCode;
+		int wrapLineLength;
+		bool breakChainedMethods;
 
-        /**
+		/**
          * @brief Construct a new Beautifier Options object
          * 
          */
-        BeautifierOptions() 
-            :   indentSize(0),
-                indentChar(L'\0'),
-                indentWithTabs(false),
-                preserveNewLines(false),
-                jsLintHappy(false),
-                braceStyle(BraceStyle::Expand),
-                keepArrayIndentation(false),
-                keepFunctionIndentation(false),
-                evalCode(false),
-                wrapLineLength(0),
-                breakChainedMethods(false)
-        { }
-    };
+		BeautifierOptions()
+			: indentSize(0)
+			, indentChar(L'\0')
+			, indentWithTabs(false)
+			, preserveNewLines(false)
+			, jsLintHappy(false)
+			, braceStyle(BraceStyle::Expand)
+			, keepArrayIndentation(false)
+			, keepFunctionIndentation(false)
+			, evalCode(false)
+			, wrapLineLength(0)
+			, breakChainedMethods(false)
+		{ }
+	};
 
-    /**
+	/**
      * @brief 
      * 
      */
-    struct BeautifierFlags
-    {
-		String  previousMode;
-		String  mode;
-		bool    varLine = false;
-		bool    varLineTainted = false;
-		bool    varLineReindented = false;
-		bool    inHtmlComment = false;
-		bool    ifLine = false;
-		int     chainExtraIndentation = 0;
-		bool    inCase = false;
-		bool    inCaseStatement = false;
-		bool    caseBody = false;
-		int     indentationLevel = 0;
-		int     ternaryDepth = 0;
+	struct BeautifierFlags
+	{
+		String previousMode;
+		String mode;
+		bool varLine = false;
+		bool varLineTainted = false;
+		bool varLineReindented = false;
+		bool inHtmlComment = false;
+		bool ifLine = false;
+		int chainExtraIndentation = 0;
+		bool inCase = false;
+		bool inCaseStatement = false;
+		bool caseBody = false;
+		int indentationLevel = 0;
+		int ternaryDepth = 0;
 
-        BeautifierFlags(const String& mode = L"") 
-            :   previousMode(L"BLOCK"),
-                mode(mode),
-                varLine(false),
-                varLineReindented(false),
-                inHtmlComment(false),
-                ifLine(false),
-                chainExtraIndentation(0),
-                inCase(false),
-                inCaseStatement(false),
-                caseBody(false),
-                indentationLevel(0),
-                ternaryDepth(0)
-        { }
-    };
-}
+		BeautifierFlags(const String& mode = L"")
+			: previousMode(L"BLOCK")
+			, mode(mode)
+			, varLine(false)
+			, varLineReindented(false)
+			, inHtmlComment(false)
+			, ifLine(false)
+			, chainExtraIndentation(0)
+			, inCase(false)
+			, inCaseStatement(false)
+			, caseBody(false)
+			, indentationLevel(0)
+			, ternaryDepth(0)
+		{ }
+	};
+} // namespace JsBeautify
 
-namespace JsBeautify 
+namespace JsBeautify
 {
-    class Beautifier
-    {
-    public:
-        /**
+	class Beautifier
+	{
+	public:
+		/**
          * @brief Construct a new Beautifier object
          * 
          */
-        Beautifier() : impl(std::make_unique<Impl>()) 
-        {}
+		Beautifier()
+			: impl(std::make_unique<Impl>())
+		{ }
 
-        Beautifier(const BeautifierOptions& opts) 
-            : impl(std::make_unique<Impl>())
-        {
-            impl->opts = opts;
+		Beautifier(const BeautifierOptions& opts)
+			: impl(std::make_unique<Impl>())
+		{
+			impl->opts = opts;
 
-            BeautifierFlags tempVar (L"BLOCK");
+			BeautifierFlags tempVar(L"BLOCK");
 			impl->flags = tempVar;
 			impl->flagStore = std::vector<BeautifierFlags>();
 			impl->wantedNewline = false;
 			impl->justAddedNewline = false;
 			impl->doBlockJustClosed = false;
 
-			(getOpts().indentWithTabs) ?
-				setIndentString(L"\t") :
-				setIndentString (
-                    String(getOpts().indentChar, 
-                        static_cast<int> (
-                            getOpts().indentSize
-                        )
-                    )
-                );
-			
-            // TODO: Clear Paranthesis.
+			(getOpts().indentWithTabs)
+				? setIndentString(L"\t")
+				: setIndentString(
+					  String(getOpts().indentChar, static_cast<int>(getOpts().indentSize)));
+
 			impl->preindentString = L"";
 			impl->lastWord = L""; // last TK_WORD seen
 			impl->lastType = L"TK_START_EXPR"; // last token type
@@ -193,33 +188,38 @@ namespace JsBeautify
 			impl->lastLastText = L""; // pre-last token text
 			impl->input = L"";
 			impl->output = std::vector<String>(); // formatted javascript gets built here
-			impl->whitespace = std::vector<wchar_t> {L'\n', L'\r', L'\t', L' '};
+			impl->whitespace = std::vector<wchar_t>{L'\n', L'\r', L'\t', L' '};
 			impl->wordchar = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
 			impl->digits = L"0123456789";
-			impl->punct = StringHelper::split(L"+ - * / % & ++ -- = += -= *= /= %= == === != !== > < >= <= >> << >>> >>>= >>= <<= && &= | || ! !! , : ? ^ ^= |= :: <?= <? ?> <%= <% %>", L' ');
+			impl->punct = StringHelper::split(
+				L"+ - * / % & ++ -- = += -= *= /= %= == === != !== > < >= <= >> << >>> >>>= >>= "
+				L"<<= && &= | || ! !! , : ? ^ ^= |= :: <?= <? ?> <%= <% %>",
+				L' ');
 
 			// Words which always should start on a new line
-			impl->lineStarters = (StringHelper::split(L"continue,try,throw,return,var,if,switch,case,default,for,while,break,function", L','));
+			impl->lineStarters = (StringHelper::split(
+				L"continue,try,throw,return,var,if,switch,case,default,for,while,break,function",
+				L','));
 
-            // TODO: Impl setMode
-            // ---
+			// TODO: Impl setMode
+			// ---
 
 			// impl->mode(L"BLOCK");
-            String mode {L"BLOCK"};
+			String mode{L"BLOCK"};
 
-            auto prev = std::make_unique<BeautifierFlags>(L"BLOCK");
+			auto prev = std::make_unique<BeautifierFlags>(L"BLOCK");
 
-			if (getFlags().previousMode != L"BLOCK")
+			if(getFlags().previousMode != L"BLOCK")
 			{
 				getFlagStore().push_back(getFlags());
-                prev.reset();
-                prev = std::make_unique<BeautifierFlags>(getFlags());
+				prev.reset();
+				prev = std::make_unique<BeautifierFlags>(getFlags());
 			}
 
 			// BeautifierFlags tempVar {mode};
 			impl->flags = tempVar;
 
-			if (getFlagStore().size() == 1)
+			if(getFlagStore().size() == 1)
 			{
 				impl->flags.indentationLevel = 0;
 			}
@@ -227,18 +227,18 @@ namespace JsBeautify
 			{
 				impl->flags.indentationLevel = prev->indentationLevel;
 
-				if (prev->varLine && prev->varLineReindented)
+				if(prev->varLine && prev->varLineReindented)
 				{
 					impl->flags.indentationLevel = getFlags().indentationLevel + 1;
 				}
 			}
 
 			getFlags().previousMode = prev->mode;
-            // ---
+			// ---
 			impl->parserPos = 0;
-        }
-        
-        /**
+		}
+
+		/**
          * @brief Get the Opts object
          * 
          * @return BeautifierOptions 
@@ -248,7 +248,7 @@ namespace JsBeautify
 			return impl->opts;
 		}
 
-        /**
+		/**
          * @brief Set the Opts object
          * 
          * @param value 
@@ -258,7 +258,7 @@ namespace JsBeautify
 			impl->opts = value;
 		}
 
-        /**
+		/**
          * @brief Get the Flags object
          * 
          * @return BeautifierFlags 
@@ -268,17 +268,17 @@ namespace JsBeautify
 			return impl->flags;
 		}
 
-        /**
+		/**
          * @brief Set the Flags object
          * 
          * @param value 
          */
 		void setFlags(BeautifierFlags& value)
 		{
-		    impl->flags = value;
+			impl->flags = value;
 		}
 
-        /**
+		/**
          * @brief Get the Flag Store object
          * 
          * @return std::vector<BeautifierFlags> 
@@ -288,7 +288,7 @@ namespace JsBeautify
 			return impl->flagStore;
 		}
 
-        /**
+		/**
          * @brief Set the Flag Store object
          * 
          * @param value 
@@ -298,7 +298,7 @@ namespace JsBeautify
 			impl->flagStore = value;
 		}
 
-        /**
+		/**
          * @brief Get the Wanted Newline object
          * 
          * @return true 
@@ -309,7 +309,7 @@ namespace JsBeautify
 			return impl->wantedNewline;
 		}
 
-        /**
+		/**
          * @brief Set the Wanted Newline object
          * 
          * @param value 
@@ -319,7 +319,7 @@ namespace JsBeautify
 			impl->wantedNewline = value;
 		}
 
-        /**
+		/**
          * @brief Get the Just Added Newline object
          * 
          * @return true 
@@ -330,7 +330,7 @@ namespace JsBeautify
 			return impl->justAddedNewline;
 		}
 
-        /**
+		/**
          * @brief Set the Just Added Newline object
          * 
          * @param value 
@@ -340,7 +340,7 @@ namespace JsBeautify
 			impl->justAddedNewline = value;
 		}
 
-        /**
+		/**
          * @brief Get the Do Block Just Closed object
          * 
          * @return true 
@@ -351,7 +351,7 @@ namespace JsBeautify
 			return impl->doBlockJustClosed;
 		}
 
-        /**
+		/**
          * @brief Set the Do Block Just Closed object
          * 
          * @param value 
@@ -361,7 +361,7 @@ namespace JsBeautify
 			impl->doBlockJustClosed = value;
 		}
 
-        /**
+		/**
          * @brief Get the Indent String object
          * 
          * @return String 
@@ -371,7 +371,7 @@ namespace JsBeautify
 			return impl->indentString;
 		}
 
-        /**
+		/**
          * @brief Set the Indent String object
          * 
          * @param value 
@@ -381,7 +381,7 @@ namespace JsBeautify
 			impl->indentString = value;
 		}
 
-        /**
+		/**
          * @brief Get the Preindent String object
          * 
          * @return String 
@@ -391,7 +391,7 @@ namespace JsBeautify
 			return impl->preindentString;
 		}
 
-        /**
+		/**
          * @brief Set the Preindent String object
          * 
          * @param value 
@@ -401,7 +401,7 @@ namespace JsBeautify
 			impl->preindentString = value;
 		}
 
-        /**
+		/**
          * @brief Get the Last Word object
          * 
          * @return String 
@@ -411,7 +411,7 @@ namespace JsBeautify
 			return impl->lastWord;
 		}
 
-        /**
+		/**
          * @brief Set the Last Word object
          * 
          * @param value 
@@ -421,7 +421,7 @@ namespace JsBeautify
 			impl->lastWord = value;
 		}
 
-        /**
+		/**
          * @brief Get the Last Type object
          * 
          * @return String 
@@ -431,7 +431,7 @@ namespace JsBeautify
 			return impl->lastType;
 		}
 
-        /**
+		/**
          * @brief Set the Last Type object
          * 
          * @param value 
@@ -441,7 +441,7 @@ namespace JsBeautify
 			impl->lastType = value;
 		}
 
-        /**
+		/**
          * @brief Get the Last Text object
          * 
          * @return String 
@@ -451,7 +451,7 @@ namespace JsBeautify
 			return impl->lastText;
 		}
 
-        /**
+		/**
          * @brief Set the Last Text object
          * 
          * @param value 
@@ -461,7 +461,7 @@ namespace JsBeautify
 			impl->lastText = value;
 		}
 
-        /**
+		/**
          * @brief Get the Last Last Text object
          * 
          * @return String 
@@ -471,7 +471,7 @@ namespace JsBeautify
 			return impl->lastLastText;
 		}
 
-        /**
+		/**
          * @brief Set the Last Last Text object
          * 
          * @param value 
@@ -481,7 +481,7 @@ namespace JsBeautify
 			impl->lastLastText = value;
 		}
 
-        /**
+		/**
          * @brief Get the Input object
          * 
          * @return String 
@@ -491,17 +491,17 @@ namespace JsBeautify
 			return impl->input;
 		}
 
-        /**
+		/**
          * @brief Set the Input object
          * 
          * @param value 
          */
-		void setInput(const String &value)
+		void setInput(const String& value)
 		{
 			impl->input = value;
 		}
 
-        /**
+		/**
          * @brief Get the Output object
          * 
          * @return std::vector<String> 
@@ -511,7 +511,7 @@ namespace JsBeautify
 			return impl->output;
 		}
 
-        /**
+		/**
          * @brief Set the Output object
          * 
          * @param value 
@@ -521,7 +521,7 @@ namespace JsBeautify
 			impl->output = value;
 		}
 
-        /**
+		/**
          * @brief Get the Whitespace object
          * 
          * @return std::vector<wchar_t> 
@@ -531,7 +531,7 @@ namespace JsBeautify
 			return impl->whitespace;
 		}
 
-        /**
+		/**
          * @brief Set the Whitespace object
          * 
          * @param value 
@@ -541,7 +541,7 @@ namespace JsBeautify
 			impl->whitespace = value;
 		}
 
-        /**
+		/**
          * @brief Get the Wordchar object
          * 
          * @return String 
@@ -551,17 +551,17 @@ namespace JsBeautify
 			return impl->wordchar;
 		}
 
-        /**
+		/**
          * @brief Set the Wordchar object
          * 
          * @param value 
          */
-		void setWordchar(const String &value)
+		void setWordchar(const String& value)
 		{
 			impl->wordchar = value;
 		}
 
-        /**
+		/**
          * @brief Get the Digits object
          * 
          * @return String 
@@ -571,7 +571,7 @@ namespace JsBeautify
 			return impl->digits;
 		}
 
-        /**
+		/**
          * @brief Set the Digits object
          * 
          * @param value 
@@ -581,7 +581,7 @@ namespace JsBeautify
 			impl->digits = value;
 		}
 
-        /**
+		/**
          * @brief Get the Punct object
          * 
          * @return std::vector<String> 
@@ -591,7 +591,7 @@ namespace JsBeautify
 			return impl->punct;
 		}
 
-        /**
+		/**
          * @brief Set the Punct object
          * 
          * @param value 
@@ -601,7 +601,7 @@ namespace JsBeautify
 			impl->punct = value;
 		}
 
-        /**
+		/**
          * @brief Get the Line Starters object
          * 
          * @return std::vector<String> 
@@ -611,17 +611,17 @@ namespace JsBeautify
 			return impl->lineStarters;
 		}
 
-        /**
+		/**
          * @brief Set the Line Starters object
          * 
          * @param value 
          */
-		void setLineStarters(const std::vector<String> &value)
+		void setLineStarters(const std::vector<String>& value)
 		{
 			impl->lineStarters = value;
-		}   
-        
-        /**
+		}
+
+		/**
          * @brief Get the Parser Pos object
          * 
          * @return int 
@@ -631,7 +631,7 @@ namespace JsBeautify
 			return impl->parserPos;
 		}
 
-        /**
+		/**
          * @brief Set the Parser Pos object
          * 
          * @param value 
@@ -641,7 +641,7 @@ namespace JsBeautify
 			impl->parserPos = value;
 		}
 
-        /**
+		/**
          * @brief 
          * 
          * @return int 
@@ -651,7 +651,7 @@ namespace JsBeautify
 			return impl->nNewlines;
 		}
 
-        /**
+		/**
          * @brief 
          * 
          * @param value 
@@ -661,32 +661,30 @@ namespace JsBeautify
 			impl->nNewlines = value;
 		}
 
-        String beautify(String& s, BeautifierOptions opts = {})
-        {
-            // TODO : OPTS conditional
-            // TODO : Apply Blank
+		String beautify(String& s, BeautifierOptions opts = {})
+		{
+			// TODO : OPTS conditional
+			// TODO : Apply Blank
 
-            while (s.length() != 0 && (s[0] == L' ' || s[0] == L'\t'))
+			while(s.length() != 0 && (s[0] == L' ' || s[0] == L'\t'))
 			{
 				setPreindentString(getPreindentString() + StringHelper::toString(s[0]));
 				s.erase(0, 1);
 			}
 
-            this->setInput(s);
-            this->setParserPos(0);
+			this->setInput(s);
+			this->setParserPos(0);
 
-            while (true)
-            {
-                auto token = getNextToken();
-                auto tokenText = std::get<0>(token);
+			while(true)
+			{
+				auto token = getNextToken();
+				auto tokenText = std::get<0>(token);
 				auto tokenType = std::get<1>(token);
 
-				if (tokenType == L"TK_EOF")
+				if(tokenType == L"TK_EOF")
 					break;
 
-
-                auto handlers = std::unordered_map<String, std::function<void(const String&)>>
-				{
+				auto handlers = std::unordered_map<String, std::function<void(const String&)>>{
 					// {L"TK_START_EXPR", &Beautifier::HandleStartExpr},
 					// {L"TK_END_EXPR", &Beautifier::HandleEndExpr},
 					// {L"TK_START_BLOCK", &Beautifier::HandleStartBlock},
@@ -703,60 +701,56 @@ namespace JsBeautify
 					// {L"TK_DOT", &Beautifier::HandleDot},
 					// {L"TK_UNKNOWN", &Beautifier::HandleUnknown}
 				};
+			}
+		}
 
-            }
-            
-            
-        }
+		std::tuple<std::wstring, std::wstring> getNextToken();
 
-        std::tuple<std::wstring, std::wstring> getNextToken();
+		void HandleStartExpr(const String& tokenText);
+		void HandleEndExpr(const String& tokenText);
+		void HandleStartBlock(const String& tokenText);
+		void HandleEndBlock(const String& tokenText);
+		void HandleWord(const String& tokenText);
+		void HandleSemicolon(const String& tokenText);
+		void HandleString(const String& tokenText);
+		void HandleEquals(const String& tokenText);
+		void HandleOperator(const String& tokenText);
+		void HandleComma(const String& tokenText);
+		void HandleBlockComment(const String& tokenText);
+		void HandleInlineComment(const String& tokenText);
+		void HandleComment(const String& tokenText);
+		void HandleDot(const String& tokenText);
+		void HandleUnknown(const String& tokenText);
 
-        void HandleStartExpr(const String &tokenText);
-        void HandleEndExpr(const String &tokenText);
-        void HandleStartBlock(const String &tokenText);
-        void HandleEndBlock(const String &tokenText);
-        void HandleWord(const String &tokenText);
-        void HandleSemicolon(const String &tokenText);
-        void HandleString(const String &tokenText);
-        void HandleEquals(const String &tokenText);
-        void HandleOperator(const String &tokenText);
-        void HandleComma(const String &tokenText);
-        void HandleBlockComment(const String &tokenText);
-        void HandleInlineComment(const String &tokenText);
-        void HandleComment(const String &tokenText);
-        void HandleDot(const String &tokenText);
-        void HandleUnknown(const String &tokenText);
+	private:
+		struct Impl
+		{
+			BeautifierOptions opts;
+			BeautifierFlags flags;
+			std::vector<BeautifierFlags> flagStore;
+			bool wantedNewline{false};
+			bool justAddedNewline{false};
+			bool doBlockJustClosed{false};
+			String indentString;
+			String preindentString;
+			String lastWord;
+			String lastType;
+			String lastText;
+			String lastLastText;
+			String input;
+			std::vector<String> output;
+			std::vector<wchar_t> whitespace;
+			String wordchar;
+			String digits;
+			std::vector<String> punct;
+			std::vector<String> lineStarters;
+			int parserPos = 0;
+			int nNewlines = 0;
 
-
-    private:
-        struct Impl 
-        {
-            BeautifierOptions               opts;
-            BeautifierFlags                 flags;
-            std::vector<BeautifierFlags>    flagStore;
-            bool                            wantedNewline {false};
-            bool                            justAddedNewline {false};
-            bool                            doBlockJustClosed {false};
-            String                          indentString;
-            String                          preindentString;
-            String                          lastWord;
-            String                          lastType;
-            String                          lastText;
-            String                          lastLastText;
-            String                          input;
-            std::vector<String>             output;
-            std::vector<wchar_t>            whitespace;
-            String                          wordchar;
-            String                          digits;
-            std::vector<String>             punct;
-            std::vector<String>             lineStarters;
-            int                             parserPos = 0;
-            int                             nNewlines = 0;
-
-            // Impl() = default;
-        };
-        std::unique_ptr<Impl> impl;
-    };
-}
+			// Impl() = default;
+		};
+		std::unique_ptr<Impl> impl;
+	};
+} // namespace JsBeautify
 
 #endif /* End of include guard : JS_BEAUTIFIER_HPP */
