@@ -12,16 +12,17 @@
 #ifndef JS_BEAUTIFIER_HPP
 #define JS_BEAUTIFIER_HPP
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <windows.h>
 
 typedef std::wstring String;
 
@@ -33,7 +34,7 @@ namespace StringHelper
      * @param source 
      * @param delimiter 
      * @return std::vector<String> 
-     */
+    **/
 	static std::vector<String> split(const String& source, wchar_t delimiter)
 	{
 		std::vector<String> output;
@@ -54,7 +55,7 @@ namespace StringHelper
      * @tparam T 
      * @param subject 
      * @return std::wstring 
-     */
+    **/
 	template <typename T>
 	static std::wstring toString(const T& subject)
 	{
@@ -62,7 +63,37 @@ namespace StringHelper
 		ss << subject;
 		return ss.str();
 	}
+
+	static String concat(const std::vector<String>& vecs)
+	{
+		String s{};
+
+		for(auto&& var : vecs)
+		{
+			s.append(var);
+		}
+
+		return s;
+	}
 } // namespace StringHelper
+
+namespace VectorHelper
+{
+	/**
+	 * @brief 
+	 * 
+	 * @tparam T 
+	 * @param vec 
+	 * @param value 
+	 * @return true 
+	 * @return false 
+	 */
+	template <typename T>
+	bool contains(const std::vector<T>& vec, const T& value)
+	{
+		return std::find(vec.begin(), vec.end(), value) != vec.end();
+	}
+}; // namespace VectorHelper
 
 namespace JsBeautify
 {
@@ -661,6 +692,8 @@ namespace JsBeautify
 			impl->nNewlines = value;
 		}
 
+		void setMode(String&& s) { }
+
 		String beautify(String& s, BeautifierOptions opts = {})
 		{
 			// TODO : OPTS conditional
@@ -685,24 +718,46 @@ namespace JsBeautify
 					break;
 
 				auto handlers = std::unordered_map<String, std::function<void(const String&)>>{
-					// {L"TK_START_EXPR", &Beautifier::HandleStartExpr},
-					// {L"TK_END_EXPR", &Beautifier::HandleEndExpr},
-					// {L"TK_START_BLOCK", &Beautifier::HandleStartBlock},
-					// {L"TK_END_BLOCK", &Beautifier::HandleEndBlock},
-					// {L"TK_WORD", &Beautifier::HandleWord},
-					// {L"TK_SEMICOLON", &Beautifier::HandleSemicolon},
-					// {L"TK_STRING", &Beautifier::HandleString},
-					// {L"TK_EQUALS", &Beautifier::HandleEquals},
-					// {L"TK_OPERATOR", &Beautifier::HandleOperator},
-					// {L"TK_COMMA", &Beautifier::HandleComma},
-					// {L"TK_BLOCK_COMMENT", &Beautifier::HandleBlockComment},
-					// {L"TK_INLINE_COMMENT", &Beautifier::HandleInlineComment},
-					// {L"TK_COMMENT", &Beautifier::HandleComment},
-					// {L"TK_DOT", &Beautifier::HandleDot},
-					// {L"TK_UNKNOWN", &Beautifier::HandleUnknown}
-				};
+					{L"TK_START_EXPR", [&](const String& s) { HandleStartExpr(s); }},
+					{L"TK_END_EXPR", [&](const String& s) { HandleEndExpr(s); }},
+					{L"TK_START_BLOCK", [&](const String& s) { HandleStartBlock(s); }},
+					{L"TK_END_BLOCK", [&](const String& s) { HandleEndBlock(s); }},
+					{L"TK_WORD", [&](const String& s) { HandleWord(s); }},
+					{L"TK_SEMICOLON", [&](const String& s) { HandleSemicolon(s); }},
+					{L"TK_STRING", [&](const String& s) { HandleString(s); }},
+					{L"TK_EQUALS", [&](const String& s) { HandleEquals(s); }},
+					{L"TK_OPERATOR", [&](const String& s) { HandleOperator(s); }},
+					{L"TK_COMMA", [&](const String& s) { HandleComma(s); }},
+					{L"TK_BLOCK_COMMENT", [&](const String& s) { HandleBlockComment(s); }},
+					{L"TK_INLINE_COMMENT", [&](const String& s) { HandleInlineComment(s); }},
+					{L"TK_COMMENT", [&](const String& s) { HandleComment(s); }},
+					{L"TK_DOT", [&](const String& s) { HandleDot(s); }},
+					{L"TK_UNKNOWN", [&](const String& s) { HandleUnknown(s); }}};
+
+				handlers[tokenType](tokenText);
+
+				if(tokenType != L"TK_INLINE_COMMENT")
+				{
+					setLastLastText(getLastText());
+					setLastType(tokenType);
+					setLastText(tokenText);
+				}
 			}
+
+			auto sweetCode = String{L""};
+			sweetCode =
+				getPreindentString() + std::regex_replace(StringHelper::concat(getOutput()),
+														  std::wregex(LR"([\n ]+$)"),
+														  L"",
+														  std::regex_constants::format_first_only);
+
+			return sweetCode;
 		}
+
+		void appendNewline(bool ignoreRepeated = true, bool resetStatementFlags = true);
+		void append(const String& s);
+		void indent();
+		void allowWrapOrPreservedNewline(const std::wstring& tokenText, bool forceLinwrap = false);
 
 		std::tuple<std::wstring, std::wstring> getNextToken();
 
@@ -751,6 +806,13 @@ namespace JsBeautify
 		};
 		std::unique_ptr<Impl> impl;
 	};
+
+	class handleEndExpr
+	{
+	public:
+		void operator()(const String&) { }
+	};
+
 } // namespace JsBeautify
 
 #endif /* End of include guard : JS_BEAUTIFIER_HPP */
