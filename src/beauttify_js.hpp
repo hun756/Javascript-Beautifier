@@ -29,19 +29,19 @@ typedef std::wstring String;
 namespace StringHelper
 {
 	/**
-     * @brief 
-     * 
-     * @param source 
-     * @param delimiter 
-     * @return std::vector<String> 
-    **/
+	 * @brief
+	 *
+	 * @param source
+	 * @param delimiter
+	 * @return std::vector<String>
+	**/
 	static std::vector<String> split(const String& source, wchar_t delimiter)
 	{
 		std::vector<String> output;
 		std::wistringstream ss(source);
 		String nextItem;
 
-		while(std::getline(ss, nextItem, delimiter))
+		while (std::getline(ss, nextItem, delimiter))
 		{
 			output.push_back(nextItem);
 		}
@@ -50,12 +50,12 @@ namespace StringHelper
 	}
 
 	/**
-     * @brief 
-     * 
-     * @tparam T 
-     * @param subject 
-     * @return std::wstring 
-    **/
+	 * @brief
+	 *
+	 * @tparam T
+	 * @param subject
+	 * @return std::wstring
+	**/
 	template <typename T>
 	static std::wstring toString(const T& subject)
 	{
@@ -68,7 +68,7 @@ namespace StringHelper
 	{
 		String s{};
 
-		for(auto&& var : vecs)
+		for (auto&& var : vecs)
 		{
 			s.append(var);
 		}
@@ -80,13 +80,13 @@ namespace StringHelper
 namespace VectorHelper
 {
 	/**
-	 * @brief 
-	 * 
-	 * @tparam T 
-	 * @param vec 
-	 * @param value 
-	 * @return true 
-	 * @return false 
+	 * @brief
+	 *
+	 * @tparam T
+	 * @param vec
+	 * @param value
+	 * @return true
+	 * @return false
 	 */
 	template <typename T>
 	bool contains(const std::vector<T>& vec, const T& value)
@@ -98,9 +98,9 @@ namespace VectorHelper
 namespace JsBeautify
 {
 	/**
-     * @brief 
-     * 
-     */
+	 * @brief
+	 *
+	 */
 	enum class BraceStyle
 	{
 		Expand,
@@ -109,9 +109,9 @@ namespace JsBeautify
 	};
 
 	/**
-     * @brief 
-     * 
-     */
+	 * @brief
+	 *
+	 */
 	struct BeautifierOptions
 	{
 		uint32_t indentSize;
@@ -127,9 +127,9 @@ namespace JsBeautify
 		bool breakChainedMethods;
 
 		/**
-         * @brief Construct a new Beautifier Options object
-         * 
-         */
+		 * @brief Construct a new Beautifier Options object
+		 *
+		 */
 		BeautifierOptions()
 			: indentSize(0)
 			, indentChar(L'\0')
@@ -146,9 +146,9 @@ namespace JsBeautify
 	};
 
 	/**
-     * @brief 
-     * 
-     */
+	 * @brief
+	 *
+	 */
 	struct BeautifierFlags
 	{
 		String previousMode;
@@ -188,9 +188,9 @@ namespace JsBeautify
 	{
 	public:
 		/**
-         * @brief Construct a new Beautifier object
-         * 
-         */
+		 * @brief Construct a new Beautifier object
+		 *
+		 */
 		Beautifier()
 			: impl(std::make_unique<Impl>())
 		{ }
@@ -210,7 +210,7 @@ namespace JsBeautify
 			(getOpts().indentWithTabs)
 				? setIndentString(L"\t")
 				: setIndentString(
-					  String(getOpts().indentChar, static_cast<int>(getOpts().indentSize)));
+					String(getOpts().indentChar, static_cast<int>(getOpts().indentSize)));
 
 			impl->preindentString = L"";
 			impl->lastWord = L""; // last TK_WORD seen
@@ -219,7 +219,7 @@ namespace JsBeautify
 			impl->lastLastText = L""; // pre-last token text
 			impl->input = L"";
 			impl->output = std::vector<String>(); // formatted javascript gets built here
-			impl->whitespace = std::vector<wchar_t>{L'\n', L'\r', L'\t', L' '};
+			impl->whitespace = std::vector<wchar_t>{ L'\n', L'\r', L'\t', L' ' };
 			impl->wordchar = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
 			impl->digits = L"0123456789";
 			impl->punct = StringHelper::split(
@@ -236,11 +236,11 @@ namespace JsBeautify
 			// ---
 
 			// impl->mode(L"BLOCK");
-			String mode{L"BLOCK"};
+			String mode{ L"BLOCK" };
 
 			auto prev = std::make_unique<BeautifierFlags>(L"BLOCK");
 
-			if(getFlags().previousMode != L"BLOCK")
+			if (getFlags().previousMode != L"BLOCK")
 			{
 				getFlagStore().push_back(getFlags());
 				prev.reset();
@@ -250,7 +250,7 @@ namespace JsBeautify
 			// BeautifierFlags tempVar {mode};
 			impl->flags = tempVar;
 
-			if(getFlagStore().size() == 1)
+			if (getFlagStore().size() == 1)
 			{
 				impl->flags.indentationLevel = 0;
 			}
@@ -258,7 +258,7 @@ namespace JsBeautify
 			{
 				impl->flags.indentationLevel = prev->indentationLevel;
 
-				if(prev->varLine && prev->varLineReindented)
+				if (prev->varLine && prev->varLineReindented)
 				{
 					impl->flags.indentationLevel = getFlags().indentationLevel + 1;
 				}
@@ -270,423 +270,423 @@ namespace JsBeautify
 		}
 
 		/**
-         * @brief Get the Opts object
-         * 
-         * @return BeautifierOptions 
-         */
+		 * @brief Get the Opts object
+		 *
+		 * @return BeautifierOptions
+		 */
 		BeautifierOptions getOpts() const
 		{
 			return impl->opts;
 		}
 
 		/**
-         * @brief Set the Opts object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Opts object
+		 *
+		 * @param value
+		 */
 		void setOpts(BeautifierOptions& value)
 		{
 			impl->opts = value;
 		}
 
 		/**
-         * @brief Get the Flags object
-         * 
-         * @return BeautifierFlags 
-         */
+		 * @brief Get the Flags object
+		 *
+		 * @return BeautifierFlags
+		 */
 		BeautifierFlags getFlags() const
 		{
 			return impl->flags;
 		}
 
 		/**
-         * @brief Set the Flags object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Flags object
+		 *
+		 * @param value
+		 */
 		void setFlags(BeautifierFlags& value)
 		{
 			impl->flags = value;
 		}
 
 		/**
-         * @brief Get the Flag Store object
-         * 
-         * @return std::vector<BeautifierFlags> 
-         */
+		 * @brief Get the Flag Store object
+		 *
+		 * @return std::vector<BeautifierFlags>
+		 */
 		std::vector<BeautifierFlags> getFlagStore() const
 		{
 			return impl->flagStore;
 		}
 
 		/**
-         * @brief Set the Flag Store object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Flag Store object
+		 *
+		 * @param value
+		 */
 		void setFlagStore(const std::vector<BeautifierFlags>& value)
 		{
 			impl->flagStore = value;
 		}
 
 		/**
-         * @brief Get the Wanted Newline object
-         * 
-         * @return true 
-         * @return false 
-         */
+		 * @brief Get the Wanted Newline object
+		 *
+		 * @return true
+		 * @return false
+		 */
 		bool getWantedNewline() const
 		{
 			return impl->wantedNewline;
 		}
 
 		/**
-         * @brief Set the Wanted Newline object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Wanted Newline object
+		 *
+		 * @param value
+		 */
 		void setWantedNewline(bool value)
 		{
 			impl->wantedNewline = value;
 		}
 
 		/**
-         * @brief Get the Just Added Newline object
-         * 
-         * @return true 
-         * @return false 
-         */
+		 * @brief Get the Just Added Newline object
+		 *
+		 * @return true
+		 * @return false
+		 */
 		bool getJustAddedNewline() const
 		{
 			return impl->justAddedNewline;
 		}
 
 		/**
-         * @brief Set the Just Added Newline object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Just Added Newline object
+		 *
+		 * @param value
+		 */
 		void setJustAddedNewline(bool value)
 		{
 			impl->justAddedNewline = value;
 		}
 
 		/**
-         * @brief Get the Do Block Just Closed object
-         * 
-         * @return true 
-         * @return false 
-         */
+		 * @brief Get the Do Block Just Closed object
+		 *
+		 * @return true
+		 * @return false
+		 */
 		bool getDoBlockJustClosed() const
 		{
 			return impl->doBlockJustClosed;
 		}
 
 		/**
-         * @brief Set the Do Block Just Closed object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Do Block Just Closed object
+		 *
+		 * @param value
+		 */
 		void setDoBlockJustClosed(bool value)
 		{
 			impl->doBlockJustClosed = value;
 		}
 
 		/**
-         * @brief Get the Indent String object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Indent String object
+		 *
+		 * @return String
+		 */
 		String getIndentString() const
 		{
 			return impl->indentString;
 		}
 
 		/**
-         * @brief Set the Indent String object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Indent String object
+		 *
+		 * @param value
+		 */
 		void setIndentString(const String& value)
 		{
 			impl->indentString = value;
 		}
 
 		/**
-         * @brief Get the Preindent String object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Preindent String object
+		 *
+		 * @return String
+		 */
 		String getPreindentString() const
 		{
 			return impl->preindentString;
 		}
 
 		/**
-         * @brief Set the Preindent String object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Preindent String object
+		 *
+		 * @param value
+		 */
 		void setPreindentString(const String& value)
 		{
 			impl->preindentString = value;
 		}
 
 		/**
-         * @brief Get the Last Word object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Last Word object
+		 *
+		 * @return String
+		 */
 		String getLastWord() const
 		{
 			return impl->lastWord;
 		}
 
 		/**
-         * @brief Set the Last Word object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Last Word object
+		 *
+		 * @param value
+		 */
 		void setLastWord(const String& value)
 		{
 			impl->lastWord = value;
 		}
 
 		/**
-         * @brief Get the Last Type object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Last Type object
+		 *
+		 * @return String
+		 */
 		String getLastType() const
 		{
 			return impl->lastType;
 		}
 
 		/**
-         * @brief Set the Last Type object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Last Type object
+		 *
+		 * @param value
+		 */
 		void setLastType(const String& value)
 		{
 			impl->lastType = value;
 		}
 
 		/**
-         * @brief Get the Last Text object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Last Text object
+		 *
+		 * @return String
+		 */
 		String getLastText() const
 		{
 			return impl->lastText;
 		}
 
 		/**
-         * @brief Set the Last Text object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Last Text object
+		 *
+		 * @param value
+		 */
 		void setLastText(const String& value)
 		{
 			impl->lastText = value;
 		}
 
 		/**
-         * @brief Get the Last Last Text object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Last Last Text object
+		 *
+		 * @return String
+		 */
 		String getLastLastText() const
 		{
 			return impl->lastLastText;
 		}
 
 		/**
-         * @brief Set the Last Last Text object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Last Last Text object
+		 *
+		 * @param value
+		 */
 		void setLastLastText(const String& value)
 		{
 			impl->lastLastText = value;
 		}
 
 		/**
-         * @brief Get the Input object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Input object
+		 *
+		 * @return String
+		 */
 		String getInput() const
 		{
 			return impl->input;
 		}
 
 		/**
-         * @brief Set the Input object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Input object
+		 *
+		 * @param value
+		 */
 		void setInput(const String& value)
 		{
 			impl->input = value;
 		}
 
 		/**
-         * @brief Get the Output object
-         * 
-         * @return std::vector<String> 
-         */
+		 * @brief Get the Output object
+		 *
+		 * @return std::vector<String>
+		 */
 		std::vector<String> getOutput() const
 		{
 			return impl->output;
 		}
 
 		/**
-         * @brief Set the Output object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Output object
+		 *
+		 * @param value
+		 */
 		void setOutput(const std::vector<String>& value)
 		{
 			impl->output = value;
 		}
 
 		/**
-         * @brief Get the Whitespace object
-         * 
-         * @return std::vector<wchar_t> 
-         */
+		 * @brief Get the Whitespace object
+		 *
+		 * @return std::vector<wchar_t>
+		 */
 		std::vector<wchar_t> getWhitespace() const
 		{
 			return impl->whitespace;
 		}
 
 		/**
-         * @brief Set the Whitespace object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Whitespace object
+		 *
+		 * @param value
+		 */
 		void setWhitespace(const std::vector<wchar_t>& value)
 		{
 			impl->whitespace = value;
 		}
 
 		/**
-         * @brief Get the Wordchar object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Wordchar object
+		 *
+		 * @return String
+		 */
 		String getWordchar() const
 		{
 			return impl->wordchar;
 		}
 
 		/**
-         * @brief Set the Wordchar object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Wordchar object
+		 *
+		 * @param value
+		 */
 		void setWordchar(const String& value)
 		{
 			impl->wordchar = value;
 		}
 
 		/**
-         * @brief Get the Digits object
-         * 
-         * @return String 
-         */
+		 * @brief Get the Digits object
+		 *
+		 * @return String
+		 */
 		String getDigits() const
 		{
 			return impl->digits;
 		}
 
 		/**
-         * @brief Set the Digits object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Digits object
+		 *
+		 * @param value
+		 */
 		void setDigits(const String& value)
 		{
 			impl->digits = value;
 		}
 
 		/**
-         * @brief Get the Punct object
-         * 
-         * @return std::vector<String> 
-         */
+		 * @brief Get the Punct object
+		 *
+		 * @return std::vector<String>
+		 */
 		std::vector<String> getPunct() const
 		{
 			return impl->punct;
 		}
 
 		/**
-         * @brief Set the Punct object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Punct object
+		 *
+		 * @param value
+		 */
 		void setPunct(const std::vector<String>& value)
 		{
 			impl->punct = value;
 		}
 
 		/**
-         * @brief Get the Line Starters object
-         * 
-         * @return std::vector<String> 
-         */
+		 * @brief Get the Line Starters object
+		 *
+		 * @return std::vector<String>
+		 */
 		std::vector<String> getLineStarters() const
 		{
 			return impl->lineStarters;
 		}
 
 		/**
-         * @brief Set the Line Starters object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Line Starters object
+		 *
+		 * @param value
+		 */
 		void setLineStarters(const std::vector<String>& value)
 		{
 			impl->lineStarters = value;
 		}
 
 		/**
-         * @brief Get the Parser Pos object
-         * 
-         * @return int 
-         */
+		 * @brief Get the Parser Pos object
+		 *
+		 * @return int
+		 */
 		int getParserPos() const
 		{
 			return impl->parserPos;
 		}
 
 		/**
-         * @brief Set the Parser Pos object
-         * 
-         * @param value 
-         */
+		 * @brief Set the Parser Pos object
+		 *
+		 * @param value
+		 */
 		void setParserPos(int value)
 		{
 			impl->parserPos = value;
 		}
 
 		/**
-         * @brief 
-         * 
-         * @return int 
-         */
+		 * @brief
+		 *
+		 * @return int
+		 */
 		int getNNewlines() const
 		{
 			return impl->nNewlines;
 		}
 
 		/**
-         * @brief 
-         * 
-         * @param value 
-         */
+		 * @brief
+		 *
+		 * @param value
+		 */
 		void setNNewlines(int value)
 		{
 			impl->nNewlines = value;
@@ -699,7 +699,7 @@ namespace JsBeautify
 			// TODO : OPTS conditional
 			// TODO : Apply Blank
 
-			while(s.length() != 0 && (s[0] == L' ' || s[0] == L'\t'))
+			while (s.length() != 0 && (s[0] == L' ' || s[0] == L'\t'))
 			{
 				setPreindentString(getPreindentString() + StringHelper::toString(s[0]));
 				s.erase(0, 1);
@@ -708,13 +708,13 @@ namespace JsBeautify
 			this->setInput(s);
 			this->setParserPos(0);
 
-			while(true)
+			while (true)
 			{
 				auto token = getNextToken();
 				auto tokenText = std::get<0>(token);
 				auto tokenType = std::get<1>(token);
 
-				if(tokenType == L"TK_EOF")
+				if (tokenType == L"TK_EOF")
 					break;
 
 				auto handlers = std::unordered_map<String, std::function<void(const String&)>>{
@@ -732,11 +732,11 @@ namespace JsBeautify
 					{L"TK_INLINE_COMMENT", [&](const String& s) { HandleInlineComment(s); }},
 					{L"TK_COMMENT", [&](const String& s) { HandleComment(s); }},
 					{L"TK_DOT", [&](const String& s) { HandleDot(s); }},
-					{L"TK_UNKNOWN", [&](const String& s) { HandleUnknown(s); }}};
+					{L"TK_UNKNOWN", [&](const String& s) { HandleUnknown(s); }} };
 
 				handlers[tokenType](tokenText);
 
-				if(tokenType != L"TK_INLINE_COMMENT")
+				if (tokenType != L"TK_INLINE_COMMENT")
 				{
 					setLastLastText(getLastText());
 					setLastType(tokenType);
@@ -744,12 +744,12 @@ namespace JsBeautify
 				}
 			}
 
-			auto sweetCode = String{L""};
+			auto sweetCode = String{ L"" };
 			sweetCode =
 				getPreindentString() + std::regex_replace(StringHelper::concat(getOutput()),
-														  std::wregex(LR"([\n ]+$)"),
-														  L"",
-														  std::regex_constants::format_first_only);
+					std::wregex(LR"([\n ]+$)"),
+					L"",
+					std::regex_constants::format_first_only);
 
 			return sweetCode;
 		}
@@ -783,9 +783,9 @@ namespace JsBeautify
 			BeautifierOptions opts;
 			BeautifierFlags flags;
 			std::vector<BeautifierFlags> flagStore;
-			bool wantedNewline{false};
-			bool justAddedNewline{false};
-			bool doBlockJustClosed{false};
+			bool wantedNewline{ false };
+			bool justAddedNewline{ false };
+			bool doBlockJustClosed{ false };
 			String indentString;
 			String preindentString;
 			String lastWord;
